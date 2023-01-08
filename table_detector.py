@@ -15,28 +15,7 @@ from more_itertools import locate
 import glob
 import os
 import random
-
-# view = {
-# 	"class_name" : "ViewTrajectory",
-# 	"interval" : 29,
-# 	"is_loop" : False,
-# 	"trajectory" : 
-# 	[
-# 		{
-# 			"boundingbox_max" : [ 6.5291471481323242, 34.024543762207031, 11.225864410400391 ],
-# 			"boundingbox_min" : [ -39.714397430419922, -16.512752532958984, -1.9472264051437378 ],
-# 			"field_of_view" : 60.0,
-# 			"front" : [ 0.54907281448319933, -0.72074094308345071, 0.42314481842352314 ],
-# 			"lookat" : [ -7.4165150225483982, -4.3692552972898397, 4.2418377265036487 ],
-# 			"up" : [ -0.27778678941340029, 0.3201300269334113, 0.90573244696378663 ],
-# 			"zoom" : 0.26119999999999988
-# 		}
-# 	],
-# 	"version_major" : 1,
-# 	"version_minor" : 0
-# }
-
-
+import math
 
 class PlaneDetection():
     def __init__(self, point_cloud):
@@ -196,32 +175,73 @@ def main():
     num_points = len(table_plane_downsampled.select_by_index(largest_idxs).points)
     print('number of points of the biggest cluster: '+str(num_points))
 
-    # cloud_others = point_cloud_downsampled.select_by_index(largest_idxs, invert=True)
-
     cloud_table.paint_uniform_color([0,1,0]) #paint in green the biggest clust.
     #table_cloud.paint_uniform_color([0,0,1]) #paint in blue the nearest to z clust.
+
+    # ------------------------------------------
+    # crop the table
+    # ------------------------------------------
+
+    center = cloud_table.get_center()
+
+    # traslate point cloud
+    point_cloud.translate(-center) # the one with the table plane segmented
+
+    # Calculate rotation angle between plane normal & z-axis
+    plane_normal = tuple([table_plane.a,table_plane.b,table_plane.c])
+    z_axis = (0,0,1)
+    rotation_angle = np.arccos(np.dot(plane_normal, z_axis) / (np.linalg.norm(plane_normal)* np.linalg.norm(z_axis)))
+
+    # Calculate rotation axis
+    plane_normal_length = math.sqrt(table_plane.a**2 + table_plane.b**2 + table_plane.c**2)
+    u1 = table_plane.b / plane_normal_length
+    u2 = -table_plane.a / plane_normal_length
+    rotation_axis = (u1, u2, 0)
+
+    # Generate axis-angle representation
+    optimization_factor = 1
+    axis_angle = tuple([x * rotation_angle * optimization_factor for x in rotation_axis])
+
+    # Rotate point cloud
+    R = point_cloud.get_rotation_matrix_from_axis_angle(axis_angle)
+    point_cloud.rotate(R, center=(0,0,0)) # the one with the table plane segmented
+
+    # Create a list of entities to draw
+
+    entities = [point_cloud_downsampled]
+    entities.append(table_plane_downsampled)
+    entities.append(cloud_table)
+
+    for x in entities:
+        x = x.translate(-center)
+        x = x.rotate(R,center=(0,0,0))
+
+    # take a bbox
+    obb = cloud_table.get_oriented_bounding_box()
+    box_points=obb.get_box_points()
+    box_points = np.asarray(box_points)
+    box_points[3:7,2]=box_points[3:7,2] - 0.3 # extend the bbox to take also the object on the table
+    box_points[:,2]=box_points[:,2] - 0.05 # to avoid to take some piece of table
+    # From numpy to Open3D
+    box_points = o3d.utility.Vector3dVector(box_points) 
+    bbox = o3d.geometry.OrientedBoundingBox.create_from_points(box_points)
+    bbox.color = (0, 1, 0)
+
+    table = point_cloud_downsampled.crop(bbox)
+
+    entities.append(bbox)
+    entities_2 = [table]
 
     # ------------------------------------------
     # Visualization
     # ------------------------------------------
 
-    # Create a list of entities to draw
-
-    entities = [point_cloud_downsampled]
-    # entities = [x.inlier_cloud for x in planes]
-    entities.append(table_plane_downsampled)
-    entities.append(cloud_table)
-    #entities.append(table_cloud)
-
     # draw the xyz axis
     frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=3.0, origin = np.array([0.,0.,0.]))
     entities.append(frame)
 
-    o3d.visualization.draw_geometries(entities),
-                                    # zoom=view['trajectory'][0]['zoom'],
-                                    # front=view['trajectory'][0]['front'],
-                                    # lookat=view['trajectory'][0]['lookat'],
-                                    # up=view['trajectory'][0]['up'])
+    o3d.visualization.draw_geometries(entities)
+    o3d.visualization.draw_geometries(entities_2)
 
 if __name__ == "__main__":
     main()
