@@ -41,7 +41,7 @@ class Model(nn.Module):
 
         self.fc1 = nn.Linear(3 * 3 * 64, 10)
         self.dropout = nn.Dropout(0.5)
-        self.fc2 = nn.Linear(10, 2)
+        self.fc2 = nn.Linear(10, 51)
         self.relu = nn.ReLU()
 
     def forward(self, x):
@@ -55,8 +55,7 @@ class Model(nn.Module):
         out = self.layer3(out)
         # print('layer 3 out = ' + str(out.shape))
 
-        out = out.view(out.size(0),
-                       -1)  # flatten to keep batch dimension and compact all others into the second dimension
+        out = out.view(out.size(0),-1)  # flatten to keep batch dimension and compact all others into the second dimension
         # print('out after view = ' + str(out.shape))
 
         out = self.relu(self.fc1(out))
