@@ -25,16 +25,14 @@ class PlaneDetection():
     def colorizeInliers(self, r,g,b):
         self.inlier_cloud.paint_uniform_color([r,g,b]) # paints the plane 
 
-    def segment(self, distance_threshold=0.04, ransac_n=3, num_iterations=200):
+    def segment(self, distance_threshold=0.04, ransac_n=3, num_iterations=200):  # Only parameters to change
 
         print('Starting plane detection')
         plane_model, inlier_idxs = self.point_cloud.segment_plane(distance_threshold=distance_threshold, 
                                                     ransac_n=ransac_n,
                                                     num_iterations=num_iterations)
         [self.a, self.b, self.c, self.d] = plane_model
-
         self.inlier_cloud = self.point_cloud.select_by_index(inlier_idxs)
-
         outlier_cloud = self.point_cloud.select_by_index(inlier_idxs, invert=True)
 
         return outlier_cloud
@@ -52,16 +50,14 @@ def main():
     # ------------------------------------------
     print("Load a ply point cloud, print it, and render it")
 
-    # dataset_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/pc'
     dataset_path = 'assignment_2/SAVI---Where-s-my-coffee-mug/datasets/scene_pc/' # relative path
 
-
     point_cloud_filenames = glob.glob(dataset_path+'/*.ply')
-    point_cloud_filename = random.choice(point_cloud_filenames)
+    pcl_random = random.choice(point_cloud_filenames) # TEST
 
-    point_cloud_filename = dataset_path+'/01.ply' # 09-12 problem for the sofa and 5-8 of the z axis not pointing towards the table
+    pcl_random = dataset_path+'/01.ply' # 09-12 problem for the sofa and 5-8 of the z axis not pointing towards the table
 
-    os.system('pcl_ply2pcd ' +point_cloud_filename+ ' pcd_point_cloud.pcd')
+    os.system('pcl_ply2pcd ' +pcl_random+ ' pcd_point_cloud.pcd')
     point_cloud_original = o3d.io.read_point_cloud('pcd_point_cloud.pcd')
 
     # downsampling : here create problem to the plane detection
