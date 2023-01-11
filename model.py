@@ -1,66 +1,69 @@
 #!/usr/bin/env python3
 
 import torch
-import torchvision
-import torch.nn as nn
-import torch.optim as optim
-
-# Load the RGB-D data and labels
-# You will need to write code to load the data and labels from your dataset
-
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import numpy as np
+from torch.autograd import Variable
+from torch import nn
 
 
-X_train, y_train =
-X_test, y_test =
+# Definition of the model. For now a 1 neuron network
 
-# Convert the data to tensors and normalize the pixel values
-X_train = torch.tensor(X_train).float() / 255
-y_train = torch.tensor(y_train).long()
-X_test = torch.tensor(X_test).float() / 255
-y_test = torch.tensor(y_test).long()
-
-
-# Define the model
-class RGBDClassifier(nn.Module):
+class Model(nn.Module):
     def __init__(self):
-        super(RGBDClassifier, self).__init__()
-        self.conv1 = nn.Conv2d(6, 32, kernel_size=3)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3)
-        self.fc1 = nn.Linear(64 * 6 * 6, 128)
-        self.fc2 = nn.Linear(128, 10)
+        super().__init__()
+
+        # bx3x224x224 input images
+        self.layer1 = nn.Sequential(
+            # 3 input channels, 16 output depth, padding and stride
+            nn.Conv2d(3, 16, kernel_size=3, padding=0, stride=2),
+            # normalizes the batch data setting the average to 0 and std to 1
+            nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.MaxPool2d(2)  # similar to image pyrdown, reduces size
+        )
+        # bx16x (244
+
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(16, 32, kernel_size=3, padding=0, stride=2),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(32, 64, kernel_size=3, padding=0, stride=2),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+
+        self.fc1 = nn.Linear(3 * 3 * 64, 10)
+        self.dropout = nn.Dropout(0.5)
+        self.fc2 = nn.Linear(10, 2)
+        self.relu = nn.ReLU()
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = torch.relu(x)
-        x = self.conv2(x)
-        x = torch.relu(x)
-        x = x.view(x.size(0),-1)
-        x = self.fc1(x)
-        x = torch.relu(x)
-        x = self.fc2(x)
-        return x
+        # print('input x = ' + str(x.shape))
+        out = self.layer1(x)
+        # print('layer 1 out = ' + str(out.shape))
 
+        out = self.layer2(out)
+        # print('layer 2 out = ' + str(out.shape))
 
-model = RGBDClassifier()
+        out = self.layer3(out)
+        # print('layer 3 out = ' + str(out.shape))
 
-# Define the loss function and optimizer
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(model.parameters(), lr=0.01)
+        out = out.view(out.size(0),
+                       -1)  # flatten to keep batch dimension and compact all others into the second dimension
+        # print('out after view = ' + str(out.shape))
 
-# Train the model
-for epoch in range(100):
-    # Forward pass
-    output = model(X_train)
-    loss = criterion(output, y_train)
+        out = self.relu(self.fc1(out))
+        # print('fc1 out = ' + str(out.shape))
 
-    # Backward pass and optimization
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
+        out = self.fc2(out)
+        # print('fc2 out = ' + str(out.shape))
+        # exit(0)
+        return out
 
-# Evaluate the model on the test set
-with torch.no_grad():
-    output = model(X_test)
-    _, preds = torch.max(output, 1)
-    accuracy = (preds == y_test).float().mean()
-    print(f"Test accuracy: {accuracy}")
