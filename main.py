@@ -34,7 +34,7 @@ def main():
 
     learning_rate = 0.001
     maximum_num_epochs = 50
-    termination_loss_threshold = 0.01
+    termination_loss_threshold = 0.0001
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -42,7 +42,7 @@ def main():
     # Datasets
     # -----------------------------------------------------------------
 
-    dataset_path = '../rgbd-dataset'
+    dataset_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-dataset'
     image_filenames = glob.glob(dataset_path + '/*/*/*_crop.png')
 
     # Sample only a few images to speed up development
@@ -58,34 +58,37 @@ def main():
     dataset_test = Dataset(test_image_filenames)
     loader_test = torch.utils.data.DataLoader(dataset=dataset_test, batch_size=256, shuffle=True)
 
+    # TODO :create folder for model.pkl   mkdir
+
     tensor_to_pil_image = transforms.ToPILImage()
-    #     for image_t, label_t in loader_train:
-    #         print(image_t.shape)
-    #         print(label_t.shape)
-    #
-    #         num_images = image_t.shape[0]
-    #         image_idxs = random.sample(range(0,num_images), k = 25)
-    #         print(image_idxs)
-    #
-    #         fig = plt.figure() # creates a fig in matplotlib
-    #         for subplot_idx, image_idx in enumerate(image_idxs, start=1):
-    #
-    #             image_pil = tensor_to_pil_image(image_t[image_idx, :, :, :]) # get images idx image_idx
-    #             ax = fig.add_subplot(5,5,subplot_idx) # create subplot
-    #             ax.xaxis.set_ticklabels([])
-    #             ax.yaxis.set_ticklabels([])
-    #             ax.xaxis.set_ticks([])
-    #             ax.yaxis.set_ticks([])
-    #
-    #
-    #             label = label_t[image_idx].data.item() # get images idx image_idx
-    #             class_name = 'dog' if label == 0 else 'cat'
-    #             ax.set_xlabel(class_name)
-    #             plt.imshow(image_pil)
-    #
-    #
-    #         plt.show()
-    #         exit(0)
+
+    # # pre-visualize a sample of the dataset
+    # for image_t, label_t in loader_train:
+    #     print(image_t.shape)
+    #     print(label_t.shape)
+        
+    #     num_images = image_t.shape[0]
+    #     image_idxs = random.sample(range(0,num_images), k = 25)
+    #     print(image_idxs)
+
+    #     fig = plt.figure() # creates a fig in matplotlib
+    #     for subplot_idx, image_idx in enumerate(image_idxs, start=1):
+
+    #         image_pil = tensor_to_pil_image(image_t[image_idx, :, :, :]) # get images idx image_idx
+    #         ax = fig.add_subplot(5,5,subplot_idx) # create subplot
+    #         ax.xaxis.set_ticklabels([])
+    #         ax.yaxis.set_ticklabels([])
+    #         ax.xaxis.set_ticks([])
+    #         ax.yaxis.set_ticks([])
+
+    #         label = label_t[image_idx]#.data.item() # get images idx image_id
+
+    #         ax.set_xlabel(label)
+    #         plt.imshow(image_pil)
+
+
+    #     plt.show()
+    #     exit(0)
 
     # -----------------------------------------------------------------
     # Training

@@ -7,6 +7,7 @@ import numpy as np
 from torch.autograd import Variable
 from torch import nn
 from torchvision import datasets, models, transforms
+import dataset
 
 
 class ClassificationVisualizer():
@@ -55,6 +56,9 @@ class ClassificationVisualizer():
 
             color = 'green' if success else 'red' 
             title = 'dog' if is_dog else 'cat'
+            # TODO print(image_idx)
+            # title = image_idx.getClassFromFileName()[1]
+
             title += ' ' + str(image_idx)
             ax.set_xlabel(title, color=color)
 
@@ -63,4 +67,3 @@ class ClassificationVisualizer():
         if not plt.fignum_exists(1):
             print('Terminating')
             exit(0)
-

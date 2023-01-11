@@ -11,14 +11,14 @@ class Dataset(torch.utils.data.Dataset):
 
     def __init__(self, image_filenames):
 
-        super().__init__()
+        # super().__init__()
 
         self.image_filenames = image_filenames
         self.num_images = len(self.image_filenames)
 
         self.labels = []
         for image_filename in self.image_filenames:
-            self.labels.append(self.getClassFromFilename(image_filename))
+            self.labels.append(self.getClassFromFilename(image_filename)[0])
 
         # Create a set of transformations
         self.transforms = transforms.Compose([
@@ -158,4 +158,4 @@ class Dataset(torch.utils.data.Dataset):
         else:
             raise ValueError('Unknown class')
 
-        return label
+        return label,class_name
