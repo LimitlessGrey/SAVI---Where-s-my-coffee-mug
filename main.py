@@ -26,7 +26,7 @@ def main():
     # Initialization
     # -----------------------------------------------------------------
     # Define hyper parameters
-    resume_training = False
+    resume_training = True
     model_path = 'model.pkl'
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'  # cuda: 0 index of gpu
 
@@ -42,7 +42,7 @@ def main():
     # Datasets
     # -----------------------------------------------------------------
 
-    dataset_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-dataset'
+    dataset_path = '/home/rafael/Desktop/rgbd-dataset'
     image_filenames = glob.glob(dataset_path + '/*/*/*_crop.png')
 
     # Sample only a few images to speed up development

@@ -1,5 +1,5 @@
-
-
+import glob
+import os
 import torch
 import numpy as np
 from colorama import Fore, Style
@@ -18,7 +18,7 @@ class Dataset(torch.utils.data.Dataset):
 
         self.labels = []
         for image_filename in self.image_filenames:
-            self.labels.append(self.getClassFromFilename(image_filename)[0])
+            self.labels.append(self.getClassFromFilename(image_filename))
 
         # Create a set of transformations
         self.transforms = transforms.Compose([
@@ -41,7 +41,7 @@ class Dataset(torch.utils.data.Dataset):
 
         parts = filename.split('/')
         part = parts[-1]
-
+       
         parts = part.split('.')
         part = parts[0]
         parts= part.split('_')
@@ -50,7 +50,7 @@ class Dataset(torch.utils.data.Dataset):
             
         else:
             class_name = parts[0] + "_" + parts[1]
-              
+             
         print('filename ' + filename + ' is a ' + Fore.RED + class_name + Style.RESET_ALL)
 
         if class_name == 'apple':
@@ -158,4 +158,14 @@ class Dataset(torch.utils.data.Dataset):
         else:
             raise ValueError('Unknown class')
 
-        return label,class_name
+        return label
+
+def GetClassListFromFolder():
+    dataset_path= '/home/rafael/Desktop/rgbd-dataset'
+    names = glob.glob(dataset_path + '/*')
+    name_list=[]
+    for name in names:
+        parts = name.split('/')
+        part = parts[-1]
+        name_list.append(part)
+    return name_list
