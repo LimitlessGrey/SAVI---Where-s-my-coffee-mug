@@ -64,8 +64,6 @@ class ClassificationVisualizer():
             ax.set_xlabel(self.class_list[label], color=color)
             # ax.legend()
 
-           
-
         plt.draw()
         key = plt.waitforbuttonpress(0.05)
         if not plt.fignum_exists(1):
