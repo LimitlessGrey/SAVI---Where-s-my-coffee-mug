@@ -37,7 +37,8 @@ class DataVisualizer():
             plt.setp(self.handles[layer], data=(xs, ys))  # update lm
 
         plt.xlabel(x_label)    
-        plt.ylabel(y_label)    
+        plt.ylabel(y_label)
+        plt.legend()
         plt.draw()
 
         key = plt.waitforbuttonpress(0.01)

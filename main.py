@@ -19,6 +19,7 @@ from sklearn.model_selection import train_test_split
 from torchvision import transforms
 from data_visualizer import DataVisualizer
 from classification_visualizer import ClassificationVisualizer
+from dataset import GetClassListFromFolder
 
 
 def main():
@@ -26,14 +27,15 @@ def main():
     # Initialization
     # -----------------------------------------------------------------
     # Define hyper parameters
-    resume_training = True
+    resume_training = False
+
     model_path = 'model.pkl'
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'  # cuda: 0 index of gpu
-
+    classList = GetClassListFromFolder()
     model = Model()  # Instantiate model
 
     learning_rate = 0.001
-    maximum_num_epochs = 50
+    maximum_num_epochs = 500
     termination_loss_threshold = 0.0001
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -42,7 +44,7 @@ def main():
     # Datasets
     # -----------------------------------------------------------------
 
-    dataset_path = '/home/rafael/Desktop/rgbd-dataset'
+    dataset_path = '/home/stigliano/Repositorios/Datasets/Coffee Mug/rgbd-dataset'
     image_filenames = glob.glob(dataset_path + '/*/*/*_crop.png')
 
     # Sample only a few images to speed up development
@@ -58,37 +60,36 @@ def main():
     dataset_test = Dataset(test_image_filenames)
     loader_test = torch.utils.data.DataLoader(dataset=dataset_test, batch_size=256, shuffle=True)
 
-    # TODO :create folder for model.pkl   mkdir
+    tensor_to_pil_image = transforms.Compose([transforms.ToPILImage()])
 
-    tensor_to_pil_image = transforms.ToPILImage()
-
-    # # pre-visualize a sample of the dataset
+    # pre-visualize a sample of the dataset
     # for image_t, label_t in loader_train:
-    #     print(image_t.shape)
-    #     print(label_t.shape)
-        
+    #     # print(image_t.shape)
+    #     # print(label_t.shape)
+    #
     #     num_images = image_t.shape[0]
     #     image_idxs = random.sample(range(0,num_images), k = 25)
-    #     print(image_idxs)
-
+    #     # print(image_idxs)
+    #
     #     fig = plt.figure() # creates a fig in matplotlib
     #     for subplot_idx, image_idx in enumerate(image_idxs, start=1):
-
+    #
     #         image_pil = tensor_to_pil_image(image_t[image_idx, :, :, :]) # get images idx image_idx
     #         ax = fig.add_subplot(5,5,subplot_idx) # create subplot
     #         ax.xaxis.set_ticklabels([])
     #         ax.yaxis.set_ticklabels([])
     #         ax.xaxis.set_ticks([])
     #         ax.yaxis.set_ticks([])
-
-    #         label = label_t[image_idx]#.data.item() # get images idx image_id
-
+    #         label_List = label_t.tolist()
+    #         label = classList[label_List[image_idx]]
+    #         # label = label_t[image_idx].data.item() # get images idx image_id
+    #
     #         ax.set_xlabel(label)
     #         plt.imshow(image_pil)
-
-
+    #
+    #
     #     plt.show()
-    #     exit(0)
+        # exit(0)
 
     # -----------------------------------------------------------------
     # Training
@@ -105,19 +106,23 @@ def main():
     if resume_training:
         checkpoint = torch.load(model_path)
         model.load_state_dict(checkpoint['model_state_dict'])
+        model.to(device)
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         idx_epoch = checkpoint['epoch']
         epoch_train_losses = checkpoint['train_losses']
+        saved_train_loss = epoch_train_losses[-1]
         epoch_test_losses = checkpoint['test_losses']
-
-        # model.train()
+        model.train()
     else:
         idx_epoch = 0
         epoch_train_losses = []
         epoch_test_losses = []
+        saved_train_loss = 1e10 # TODO: Confirmar este valor
+        model.to(device)
+        model.train()
     # -----------
 
-    model.to(device)  # move the model variable to the gpu if one exists
+    # model.to(device)  # move the model variable to the gpu if one exists
     while True:
 
         # Train batch by batch -----------------------------------------------
@@ -193,9 +198,12 @@ def main():
         model.to(device)
 
         idx_epoch += 1  # go to next epoch
+        # -----------------------------------------------------------------
         # Termination criteria
+        # -----------------------------------------------------------------
         if idx_epoch > maximum_num_epochs:
             print('Finished training. Reached maximum number of epochs.')
+
             break
         elif epoch_train_loss < termination_loss_threshold:
             print('Finished training. Reached target loss.')

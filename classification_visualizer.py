@@ -43,7 +43,8 @@ class ClassificationVisualizer():
             max_value=max(output_probability)
             label=output_probability.index(max_value)
 
-
+            # print(labels[image_idx].data.item())
+            # print(label)
             if labels[image_idx].data.item() == label:
                 color='green'
             else:
@@ -61,6 +62,7 @@ class ClassificationVisualizer():
             ax.xaxis.set_ticks([])
             ax.yaxis.set_ticks([])
             ax.set_xlabel(self.class_list[label], color=color)
+            # ax.legend()
 
            
 

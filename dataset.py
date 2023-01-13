@@ -161,7 +161,7 @@ class Dataset(torch.utils.data.Dataset):
         return label
 
 def GetClassListFromFolder():
-    dataset_path= '/home/rafael/Desktop/rgbd-dataset'
+    dataset_path= '/home/stigliano/Repositorios/Datasets/Coffee Mug/rgbd-dataset'
     names = glob.glob(dataset_path + '/*')
     name_list=[]
     for name in names:
