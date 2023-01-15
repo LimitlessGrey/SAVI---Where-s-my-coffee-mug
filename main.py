@@ -28,7 +28,6 @@ def main():
     # Define hyper parameters
     resume_training = False
     model_path = 'model.pkl'
-    model_path_full__train = 'Full train/model.pkl'
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'  # cuda: 0 index of gpu
 
     model = Model()  # Instantiate model
@@ -106,7 +105,7 @@ def main():
 
     # # Resume training
     if resume_training:
-        checkpoint = torch.load(model_path_full__train)
+        checkpoint = torch.load(model_path)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         idx_epoch = checkpoint['epoch']
