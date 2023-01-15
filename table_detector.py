@@ -5,7 +5,7 @@ import pickle
 from copy import deepcopy
 from random import randint
 from turtle import color
-
+from gtts import gTTS
 import open3d as o3d
 import cv2
 import numpy as np
