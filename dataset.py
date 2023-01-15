@@ -11,15 +11,16 @@ class Dataset(torch.utils.data.Dataset):
 
     def __init__(self, image_filenames):
 
-        # super().__init__()
+        super().__init__()
 
         self.image_filenames = image_filenames
         self.num_images = len(self.image_filenames)
-
+        self.class_names = []
         self.labels = []
         for image_filename in self.image_filenames:
-            self.labels.append(self.getClassFromFilename(image_filename))
-
+            self.labels.append(self.getClassFromFilename(image_filename)[0])
+            self.class_names.append(self.getClassFromFilename(image_filename)[1])
+     
         # Create a set of transformations
         self.transforms = transforms.Compose([
             transforms.Resize((224, 224)),
@@ -31,8 +32,8 @@ class Dataset(torch.utils.data.Dataset):
         image_pil = Image.open(self.image_filenames[index])
 
         image_t = self.transforms(image_pil)
-
-        return image_t, self.labels[index]
+     
+        return image_t, self.labels[index], self.class_names[index]
 
     def __len__(self):  # return the length of the dataset
         return self.num_images
@@ -44,6 +45,7 @@ class Dataset(torch.utils.data.Dataset):
        
         parts = part.split('.')
         part = parts[0]
+
         parts= part.split('_')
         if parts[1].isnumeric():
             class_name = parts[0]
@@ -51,8 +53,8 @@ class Dataset(torch.utils.data.Dataset):
         else:
             class_name = parts[0] + "_" + parts[1]
              
-        print('filename ' + filename + ' is a ' + Fore.RED + class_name + Style.RESET_ALL)
-
+        # print('filename ' + filename + ' is a ' + Fore.RED + class_name + Style.RESET_ALL)
+       
         if class_name == 'apple':
             label = 0  # use the idx of the outputs vector where the 1 should be
         elif class_name == 'ball':
@@ -158,8 +160,10 @@ class Dataset(torch.utils.data.Dataset):
         else:
             raise ValueError('Unknown class')
 
-        return label
+        return label, class_name
 
+<<<<<<< HEAD
+=======
 def GetClassListFromFolder():
     dataset_path= '/home/stigliano/Repositorios/Datasets/Coffee Mug/rgbd-dataset'
     names = glob.glob(dataset_path + '/*')
@@ -169,3 +173,4 @@ def GetClassListFromFolder():
         part = parts[-1]
         name_list.append(part)
     return name_list
+>>>>>>> 44e93d211bbb51d700852b1971e8659c465f8216
