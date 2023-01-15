@@ -163,16 +163,3 @@ class Dataset(torch.utils.data.Dataset):
             raise ValueError('Unknown class')
 
         return label, class_name
-
-<<<<<<< HEAD
-=======
-def GetClassListFromFolder():
-    dataset_path= '/home/stigliano/Repositorios/Datasets/Coffee Mug/rgbd-dataset'
-    names = glob.glob(dataset_path + '/*')
-    name_list=[]
-    for name in names:
-        parts = name.split('/')
-        part = parts[-1]
-        name_list.append(part)
-    return name_list
->>>>>>> 44e93d211bbb51d700852b1971e8659c465f8216
