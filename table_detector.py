@@ -18,6 +18,7 @@ import random
 import math
 import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
+# import pynche
 
 view={
 	"class_name" : "ViewTrajectory",
@@ -98,7 +99,7 @@ def main():
     point_cloud_filenames = glob.glob(dataset_path+'/*.ply')
     point_cloud_filename = random.choice(point_cloud_filenames)
 
-    point_cloud_filename = dataset_path+'/01.ply' # 09-12 problem for the sofa and 5-8 of the z axis not pointing towards the table
+    # point_cloud_filename = dataset_path+'/01.ply' # 09-12 problem for the sofa and 5-8 of the z axis not pointing towards the table
 
     os.system('pcl_ply2pcd ' +point_cloud_filename+ ' pcd_point_cloud.pcd')
     point_cloud_original = o3d.io.read_point_cloud('pcd_point_cloud.pcd')
@@ -361,6 +362,13 @@ def main():
         d = {}
         d['idx'] = str(object_idx)
         d['points'] = object_points
+
+        mean_color = [0,0,0]
+        for color in np.asarray(object_points.colors):
+            mean_color=mean_color+color
+        mean_color = mean_color/np.asarray(object_points.colors).shape[0]
+        d['mean_color']=mean_color
+
         d['center'] = d['points'].get_center()
         d['bbox'] = d['points'].get_axis_aligned_bounding_box()
         d['bbox'].color=(0,1,0)
@@ -432,7 +440,7 @@ def main():
     for object_idx, object in enumerate(objects):
         label_pos = [object['center'][0], object['center'][1], object['center'][2] - object['height'] -0.1]
 
-        label_text = 'object idx: '+object['idx']+'\nheight: '+str(object['height']*100)+'\nwidth: '+str(object['width']*100)+'\nlength: '+str(object['length']*100)+'\nvolume: '+str(object['volume']*100*100*100)+'\ndistance from center table:'+str(object['distance']*100) 
+        label_text = 'object idx: '+object['idx']+'\nheight: '+str(object['height']*100)+'\nwidth: '+str(object['width']*100)+'\nlength: '+str(object['length']*100)+'\nvolume: '+str(object['volume']*100*100*100)+'\ndistance from center table:'+str(object['distance']*100)+'\nmean color:'+str(object['mean_color'])
 
         label = widget3d.add_3d_label(label_pos, label_text)
         # label.color = gui.Color(object['color'][0], object['color'][1],object['color'][2])
