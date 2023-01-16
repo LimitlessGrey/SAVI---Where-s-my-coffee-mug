@@ -44,7 +44,7 @@ def main():
     # Datasets
     # -----------------------------------------------------------------
 
-    dataset_path = '/home/rafael/Desktop/rgbd-dataset'
+    dataset_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-dataset'# '/home/rafael/Desktop/rgbd-dataset'
     image_filenames = glob.glob(dataset_path + '/*/*/*_crop.png')
 
     # Sample only a few images to speed up development
@@ -134,7 +134,6 @@ def main():
 
             # Apply the network to get the predicted ys
             label_t_predicted = model.forward(image_t)
-            print( batch)
             # Compute the error based on the predictions
             loss = loss_function(label_t_predicted, label_t)
       
