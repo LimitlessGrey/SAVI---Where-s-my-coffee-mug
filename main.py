@@ -19,6 +19,8 @@ from sklearn.model_selection import train_test_split
 from torchvision import transforms
 from data_visualizer import DataVisualizer
 from classification_visualizer import ClassificationVisualizer
+from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
 
 
 def main():
@@ -26,7 +28,7 @@ def main():
     # Initialization
     # -----------------------------------------------------------------
     # Define hyper parameters
-    resume_training = False
+    resume_training = True
     model_path = 'model.pkl'
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'  # cuda: 0 index of gpu
 
@@ -124,7 +126,7 @@ def main():
 
         # Train batch by batch -----------------------------------------------
         train_losses = []
-        for batch_idx, (image_t, label_t,_) in tqdm(enumerate(loader_train), total=len(loader_train),
+        for batch_idx, (image_t, label_t, class_name) in tqdm(enumerate(loader_train), total=len(loader_train),
                                                   desc=Fore.GREEN + 'Training batches for Epoch ' + str(
                                                           idx_epoch) + Style.RESET_ALL):
             image_t = image_t.to(device)
@@ -132,10 +134,16 @@ def main():
 
             # Apply the network to get the predicted ys
             label_t_predicted = model.forward(image_t)
-
+            print( batch)
             # Compute the error based on the predictions
             loss = loss_function(label_t_predicted, label_t)
-           
+      
+            
+                # label_true = label_t[image_idx]
+                # label_predicted = label_t_predicted[image_idx]
+                # print(label_true, label_predicted)
+
+                  
 
             # Update the model, i.e. the neural network's weights
             optimizer.zero_grad()  # resets the weights to make sure we are not accumulating
@@ -149,6 +157,7 @@ def main():
         epoch_train_losses.append(epoch_train_loss)
 
         print(Fore.BLUE + 'Epoch ' + str(idx_epoch) + ' Loss ' + str(epoch_train_loss) + Style.RESET_ALL)
+        # print(classification_report(label_true.data.item(), label_predicted.data.item(), target_names=class_name[image_idx], digits=4))
         
         #Run test in batches ---------------------------------------
         # TODO dropout
@@ -186,16 +195,16 @@ def main():
         loss_visualizer.recomputeAxesRanges()
 
         
-        #Save checkpoint
-        # model.to('cpu')
-        # torch.save({
-        #     'epoch': idx_epoch,
-        #     'model_state_dict': model.state_dict(),
-        #     'optimizer_state_dict': optimizer.state_dict(),
-        #     'train_losses': epoch_train_losses,
-        #     'test_losses': epoch_test_losses,
-        # }, model_path)
-        # model.to(device)
+        # Save checkpoint
+        model.to('cpu')
+        torch.save({
+            'epoch': idx_epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'train_losses': epoch_train_losses,
+            'test_losses': epoch_test_losses,
+        }, model_path)
+        model.to(device)
         
 
         idx_epoch += 1  # go to next epoch
