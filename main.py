@@ -48,7 +48,7 @@ def main():
     image_filenames = glob.glob(dataset_path + '/*/*/*_crop.png')
 
     # Sample only a few images to speed up development
-    image_filenames = random.sample(image_filenames, k=900)
+    image_filenames = random.sample(image_filenames, k=1900)
 
     # split images into train and test
     train_image_filenames, test_image_filenames = train_test_split(image_filenames, test_size=0.2)
