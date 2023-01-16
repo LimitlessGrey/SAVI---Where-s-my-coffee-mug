@@ -20,7 +20,9 @@ import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
 from Classifier import Classifier
 from PIL import Image
+from TTS import TTS
 
+# define the view for visualize different results
 view={
 	"class_name" : "ViewTrajectory",
 	"interval" : 29,
@@ -95,37 +97,39 @@ def main():
     # ------------------------------------------
     print("Load a ply point cloud, print it, and render it")
 
-    dataset_path = 'assignment_2/SAVI---Where-s-my-coffee-mug/datasets/scene_pc' # relative path
-
-
-    image = cv2.imread('/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/imgs/scene_01/00000-color.png')
+    dataset_path = 'assignment_2/SAVI---Where-s-my-coffee-mug/datasets/scene_pc' 
 
     point_cloud_filenames = glob.glob(dataset_path+'/*.ply')
     point_cloud_filename = random.choice(point_cloud_filenames)
 
-    point_cloud_filename = dataset_path+'/01.ply' # 09-12 problem for the sofa and 5-8 of the z axis not pointing towards the table
+    # uncomment this to manually select a scenario
+    point_cloud_filename = dataset_path+'/01.ply' 
+
+    # find the correspondent rgb images
+    parts = point_cloud_filename.split('/')
+    part = parts[-1]
+    part = part.split('.')
+    part = part[0]
+
+    image_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/imgs/scene_'+str(part)+'/00000-color.png'
+    image = cv2.imread(image_path)
 
     os.system('pcl_ply2pcd ' +point_cloud_filename+ ' pcd_point_cloud.pcd')
     point_cloud_original = o3d.io.read_point_cloud('pcd_point_cloud.pcd')
-
-    # downsampling : here create problem to the plane detection
-    # point_cloud_downsampled = point_cloud_original.voxel_down_sample(voxel_size=0.01)
-    # print('after downsampling point cloud has '+str(len(point_cloud_downsampled.points))+'points')
-
-    number_of_planes = 2
-    minimum_number_points = 25
-    colormap = cm.Pastel1(list(range(0,number_of_planes)))
+    point_cloud = deepcopy(point_cloud_original)
+    point_cloud_2 = deepcopy(point_cloud_original)# second copy for visualization  
 
     # ------------------------------------------
     # Execution
     # ------------------------------------------
+    number_of_planes = 2
+    minimum_number_points = 25
+    colormap = cm.Pastel1(list(range(0,number_of_planes)))
 
-    point_cloud = deepcopy(point_cloud_original)
-    point_cloud_2 = deepcopy(point_cloud_original)
     planes = []
     while True: # run consecutive plane detections
 
-        plane = PlaneDetection(point_cloud) #ex2/factory_without_ground.ply create a new plane instance
+        plane = PlaneDetection(point_cloud) 
         point_cloud = plane.segment(distance_threshold=0.035, ransac_n=3, num_iterations=200) # new point cloud are the outliers of this plane detection
         print(plane)
 
@@ -145,7 +149,7 @@ def main():
 
     # select table plane
     table_plane = None
-    table_plane_mean_xy = 1000
+    table_plane_mean_xy = 1000 # large number
     for plane_idx, plane in enumerate(planes):
         center = plane.inlier_cloud.get_center()
         print('Cloud ' + str(plane_idx) + ' has center '+str(center))
@@ -170,9 +174,6 @@ def main():
 
     cluster_idxs = list(table_plane_downsampled.cluster_dbscan(eps=0.08, min_points=50, print_progress=True))
 
-    # print(cluster_idxs)
-    # print(type(cluster_idxs))
-
     possible_values = list(set(cluster_idxs))
     if -1 in cluster_idxs:
         possible_values.remove(-1)
@@ -187,12 +188,13 @@ def main():
             largest_cluster_idx = value
             largest_cluster_num_points = num_points
 
-    # search for the nearest cluster to the z axis
+    # search for the nearest cluster to the z axis (mean xy closest to zero)
     nearest_z_cluster_idx = None
     table_cloud_mean_xy = 1000
     for value in possible_values:
         idxs = list(locate(cluster_idxs, lambda x: x == value))
         center = table_plane_downsampled.select_by_index(idxs).get_center()
+
         # select the cluster closest to the z axis --> min x and min y
         mean_x = center[0]
         mean_y = center[1]
@@ -201,27 +203,20 @@ def main():
         mean_xy = abs(mean_x) + abs(mean_y)
         if mean_xy < table_cloud_mean_xy:
             nearest_z_cluster_idx = value
-            #table_cloud = table_plane_downsampled.select_by_index(idxs)
             table_cloud_mean_xy = mean_xy
 
 
     largest_idxs = list(locate(cluster_idxs, lambda x: x == largest_cluster_idx))
     nearest_z_idxs= list(locate(cluster_idxs, lambda x: x == nearest_z_cluster_idx))
 
-    # now select the table: the table is the nearest to the z axis only if it has a certain amount of points, otherwise is the biggest clust
+    # Choose the table: the table is the nearest to the z axis only if it has a certain amount of points, otherwise is the biggest clust
     num_points = len(table_plane_downsampled.select_by_index(nearest_z_idxs).points)
     if num_points >= 5000:
         cloud_table = table_plane_downsampled.select_by_index(nearest_z_idxs)
     else:
         cloud_table = table_plane_downsampled.select_by_index(largest_idxs)
 
-    # print num of points
-    print('number of points of the nearest to z cluster: '+str(num_points))
-    num_points = len(table_plane_downsampled.select_by_index(largest_idxs).points)
-    print('number of points of the biggest cluster: '+str(num_points))
-
-    cloud_table.paint_uniform_color([0,1,0]) #paint in green the biggest clust.
-    #table_cloud.paint_uniform_color([0,0,1]) #paint in blue the nearest to z clust.
+    cloud_table.paint_uniform_color([0,1,0]) # paint in green the table
 
     # ------------------------------------------
     # crop the table
@@ -252,7 +247,6 @@ def main():
     point_cloud.rotate(R, center=(0,0,0)) 
 
     # Create a list of entities to draw
-
     entities = [point_cloud_downsampled]
     entities.append(table_plane_downsampled)
     entities.append(cloud_table)
@@ -263,19 +257,17 @@ def main():
 
     # take a bbox
     obb = cloud_table.get_oriented_bounding_box()
-    # obb = cloud_table.get_axis_aligned_bounding_box()
-
     box_points=obb.get_box_points()
-
-    entities.append(obb)
-
     box_points = np.asarray(box_points)
   
+    entities.append(obb)
+
+    # Extend in the z direction the box , since the axis are not perfectly alligned we need to make some calculation
     # search for the couple of vertices (the ones with closest x and y)
     couples = []
     for i in range(np.shape(box_points)[0]):
         xy = 0
-        min_difference = 10 #big number
+        min_difference = 100 #big number
         for j in range(np.shape(box_points)[0]):
             if i != j:
                 x_difference = abs(box_points[i,0]-box_points[j,0])
@@ -291,19 +283,12 @@ def main():
         couple = []
 
     z = sorted(box_points[:,2])
-    # high_z = box_points[:,2].max()
-    # low_z = box_points[:,2].min()
-    high_z = z[4] # is teh highest of the four bottom vertices
-    low_z = z[0]
 
-    # # uniform the z (take the first couple as standard)
-    # if box_points[couples[0][0],2] < box_points[couples[0][1],2]:
-    #     low_z = box_points[couples[0][0],2]
-    #     high_z = box_points[couples[0][1],2]
-    # else:
-    #     low_z = box_points[couples[0][1],2]
-    #     high_z = box_points[couples[0][0],2]
+    # z axis is pointing from the table to the floor
+    high_z = z[4] # is the highest of the four bottom vertices
+    low_z = z[0] # is the smallest so the highest of the bbox
 
+    # Uniform the z values of the bbox
     for i in range(len(couples)):
         if box_points[couples[i][0],2] < box_points[couples[i][1],2]:
             box_points[couples[i][0],2] = low_z
@@ -312,7 +297,7 @@ def main():
             box_points[couples[i][1],2] = low_z
             box_points[couples[i][0],2] = high_z
 
-        # for each couple extend one vertices
+        # for each couple extend one vertices in z direction
         if box_points[couples[i][0],2] < box_points[couples[i][1],2]:
             box_points[couples[i][0],2] = box_points[couples[i][0],2] - 0.4
         else:
@@ -321,17 +306,14 @@ def main():
     # From numpy to Open3D
     box_points = o3d.utility.Vector3dVector(box_points) 
     bbox = o3d.geometry.OrientedBoundingBox.create_from_points(box_points)
-    # bbox = o3d.geometry.AxisAlignedBoundingBox.create_from_points(box_points)
     bbox.color = (0, 1, 0)
-
-    # table = point_cloud_downsampled.crop(bbox)
-
     entities.append(bbox)
 
     # ------------------------------------------
     # from the cropped table isolate the object
     # ------------------------------------------
 
+    # take another copy of the original point cloud so it isn't downsampled
     point_cloud_2.translate(-center) 
     point_cloud_2.rotate(R, center=(0,0,0))
 
@@ -344,7 +326,10 @@ def main():
     color = [0,0,1]
     plane.colorizeInliers(r=color[0], g=color[1], b=color[2])
 
+    # define entities to draw (second representation)
     entities_2 = [table]
+
+    # downsapling for clustering faster
     table_plane_down= plane.inlier_cloud.voxel_down_sample(voxel_size=0.01)
     entities_2.append(table_plane_down)
 
@@ -367,18 +352,19 @@ def main():
         d['idx'] = str(object_idx)
         d['points'] = object_points
 
+        # compute bbox of the object
+        d['center'] = d['points'].get_center()
+        d['bbox'] = d['points'].get_axis_aligned_bounding_box()
+        d['bbox'].color=(0,1,0)
+
+        # compute mean color of the object
         mean_color = [0,0,0]
         for color in np.asarray(object_points.colors):
             mean_color=mean_color+color
         mean_color = mean_color/np.asarray(object_points.colors).shape[0]
         d['mean_color']=mean_color
 
-        d['center'] = d['points'].get_center()
-        d['bbox'] = d['points'].get_axis_aligned_bounding_box()
-        d['bbox'].color=(0,1,0)
-
-        # compute properties of objects:
-
+        # compute other properties of objects:
         max_bound = d['points'].get_max_bound()
         min_bound = d['points'].get_min_bound()
         d['length'] = abs(abs(max_bound[0])-abs(min_bound[0])) 
@@ -387,14 +373,13 @@ def main():
         d['volume'] = d['length']*d['width']*d['height']
         d['distance'] = math.sqrt(d['center'][0]**2 + d['center'][1]**2)
 
+        # select the object that are over the table, near the center of the table, and have a reasonable size
         if d['center'][2] <= -0.03 and d['volume'] <= 0.03 and d['distance'] <= 0.6 : 
             objects.append(d) # add the dict of this object to the list
 
     # Draw objects
     for object_idx, object in enumerate(objects):
         entities_2.append(object['bbox'])
-
-
 
     # ------------------------------------------
     # Visualization
@@ -429,11 +414,7 @@ def main():
     material.shader = "defaultUnlit"
     material.point_size = 2 * w.scaling
 
-    # Draw entities
-    # entities_2.remove(table_plane_down)
-    # for entity_idx, entity in enumerate(entities_2):
-    #     widget3d.scene.add_geometry("Entity " + str(entity_idx), entity, material)
-
+    # define entities to draw in this representation
     entities_3 = []
     for object_idx, object in enumerate(objects):
         entities_3.append(object['points'])
@@ -442,16 +423,13 @@ def main():
     for entity_idx, entity in enumerate(entities_3):
         widget3d.scene.add_geometry("Entity " + str(entity_idx), entity, material)
 
-    # Draw labels
+    # Draw labels over the objects
     for object_idx, object in enumerate(objects):
+
         label_pos = [object['center'][0], object['center'][1], object['center'][2] - object['height'] -0.1]
-
         label_text = 'object idx: '+object['idx']+'\nheight: '+str(object['height']*100)+'\nwidth: '+str(object['width']*100)+'\nlength: '+str(object['length']*100)+'\nvolume: '+str(object['volume']*100*100*100)+'\ndistance from center table:'+str(object['distance']*100)+'\nmean color:'+str(object['mean_color'])
-
         label = widget3d.add_3d_label(label_pos, label_text)
-        # label.color = gui.Color(object['color'][0], object['color'][1],object['color'][2])
         label.color = gui.Color(1,1,1)
-        # label.scale = 2
         
     bbox = widget3d.scene.bounding_box
     widget3d.setup_camera(60.0, bbox, bbox.get_center())
@@ -462,45 +440,28 @@ def main():
     #--------------------------------------
     # image processing
     #--------------------------------------
-    # image = cv2.imread('/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/imgs/scene_01/00000-color.png')
 
-    # camera parameters
+    # define camera parameters
     intrinsic = np.array([[570.3, 0, 320],[ 0 , 570.3, 240],[0,0,1]])
     rvec = np.eye(3)
     tvec = np.float32([0,0,0]).reshape(1,3)
-    distCoeff=np.empty((1,4),dtype=float)
+    distCoeff = np.empty((1,4),dtype=float)
 
-    # img cropped size
-    width = 80
-    height = 70
-
-    # new entities for camera point of view
-    entities_4 = []
-    entities_4.append(point_cloud_original)
-    frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=2, origin = [0,0,0])
-    entities_4.append(frame)
-
+    # apply the inverse transformation to return in the camera point of view
     for object_idx, object in enumerate(objects):
         object['center_wrt_cam'] = object['points'].rotate(np.transpose(R),center=(0,0,0))
         object['center_wrt_cam']= object['center_wrt_cam'].translate(center)
         object['center_wrt_cam']= object['center_wrt_cam'].get_center()
 
-        frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=0.5, origin = np.array(object['center_wrt_cam']))
-        entities_4.append(frame)
-
         [img_points,_] = cv2.projectPoints(object['center_wrt_cam'], rvec, tvec, intrinsic,distCoeffs=distCoeff)
         object['img_point']= img_points[0][0]
-
         object['x_pix'] = int(object['img_point'][0])
         object['y_pix'] = int(object['img_point'][1])
 
-    # validate the object
+    # validate the object view: in a image you may find overlapped objects
     for object_idx, object in enumerate(objects):
         for object_idx_2, object_2 in enumerate(objects):
             if object['idx'] != object_2['idx'] and object['idx'] < object_2['idx']:
-                # print(object['idx'])
-                # print(object_2['idx'])
-                # print(abs( abs(object['x_pix']) - abs(object_2['x_pix']) ))
 
                 if abs( abs(object['x_pix']) - abs(object_2['x_pix']) ) > 80 :
                     object['valid'] = True
@@ -512,7 +473,11 @@ def main():
                         object['valid'] = False
                         object_2['valid'] = True
                         
-    # print on the image the valid object
+    # image cropped size
+    width = 80
+    height = 70
+
+    # crop the valid object from the image
     for object_idx, object in enumerate(objects):
         if object['valid'] == True:
             
@@ -520,27 +485,29 @@ def main():
             top_l_y =  object['y_pix'] - int(height/2)
             bot_r_x = object['x_pix'] + int(width/2)
             bott_r_y =  object['y_pix'] + int(height/2)
-
             object['crop'] = image[ top_l_y:bott_r_y , top_l_x:bot_r_x ]
+
+            # print and wait 
             cv2.imshow('win',object['crop'])
             cv2.waitKey(0)
+
+            # pass the image to the classifier
             im = Image.fromarray(object['crop'])
             object['class_name'] = Classifier(im)
             print(object['class_name'])
+            text_to_speach = 'the object detected is a'+ object['class_name']
+            TTS(text_to_speach)
 
+            # draw on the image
             img_2 = cv2.circle(image, (object['x_pix'],object['y_pix']), 3 ,[0,255,0], -1)
             img_2 = cv2.rectangle(image, (top_l_x,top_l_y) ,(bot_r_x,bott_r_y), [0,255,0], 2)
 
-
-    # o3d.visualization.draw_geometries(entities_4,   
-    #                             zoom=view['trajectory'][0]['zoom'],
-    #                             front=view['trajectory'][0]['front'],
-    #                             lookat=view['trajectory'][0]['lookat'],
-    #                             up=view['trajectory'][0]['up'],
-    #                             point_show_normal=False)
+    # show the final image with the valid objects
+    cv2.imshow('win',image)
+    cv2.waitKey(0)
 
     #-------------------------------------------------- 
-    # # other images
+    # elaborate all the other images
     #---------------------------------------------
     # 0.813492 -0.0473971 -0.515618 -0.264773 0.959567 -0.513907 0.9545 # for image 00887
 
@@ -585,9 +552,6 @@ def main():
     #     bot_r_x = x_pix + int(width/2)
     #     bott_r_y =  y_pix + int(height/2)
     #     img_2 = cv2.rectangle(image, (top_l_x,top_l_y) ,(bot_r_x,bott_r_y), [0,255,0], 2)
-
-    cv2.imshow('win',image)
-    cv2.waitKey(0)
 
 
 if __name__ == "__main__":
