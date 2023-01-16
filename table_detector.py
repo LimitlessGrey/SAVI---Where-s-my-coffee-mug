@@ -455,30 +455,10 @@ def main():
 
     app.run()
 
-    # new entities for camera point of view
-    entities_4 = []
-    entities_4.append(point_cloud_original)
-
-    frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=2, origin = [0,0,0])
-    entities_4.append(frame)
-
-    center_points=np.array([0,0,0])
-    for object_idx, object in enumerate(objects):
-        object['center_wrt_cam'] = object['points'].rotate(np.transpose(R),center=(0,0,0))
-        object['center_wrt_cam']= object['center_wrt_cam'].translate(center)
-        object['center_wrt_cam']= object['center_wrt_cam'].get_center()
-        center_points=np.vstack([center_points,object['center_wrt_cam']])
-        frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=0.5, origin = np.array(object['center_wrt_cam']))
-        entities_4.append(frame)
-
-    center_points = np.delete(center_points,0,0)
-
-    # o3d.visualization.draw_geometries(entities_4,   
-    #                             zoom=view['trajectory'][0]['zoom'],
-    #                             front=view['trajectory'][0]['front'],
-    #                             lookat=view['trajectory'][0]['lookat'],
-    #                             up=view['trajectory'][0]['up'],
-    #                             point_show_normal=False)
+    #--------------------------------------
+    # image processing
+    #--------------------------------------
+    image = cv2.imread('/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/imgs/scene_01/00000-color.png')
 
     # camera parameters
     intrinsic = np.array([[570.3, 0, 320],[ 0 , 570.3, 240],[0,0,1]])
@@ -486,7 +466,71 @@ def main():
     tvec = np.float32([0,0,0]).reshape(1,3)
     distCoeff=np.empty((1,4),dtype=float)
 
-    image = cv2.imread('/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/imgs/scene_01/00000-color.png')
+    # img cropped size
+    width = 80
+    height = 70
+
+    # new entities for camera point of view
+    entities_4 = []
+    entities_4.append(point_cloud_original)
+    frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=2, origin = [0,0,0])
+    entities_4.append(frame)
+
+    for object_idx, object in enumerate(objects):
+        object['center_wrt_cam'] = object['points'].rotate(np.transpose(R),center=(0,0,0))
+        object['center_wrt_cam']= object['center_wrt_cam'].translate(center)
+        object['center_wrt_cam']= object['center_wrt_cam'].get_center()
+
+        frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=0.5, origin = np.array(object['center_wrt_cam']))
+        entities_4.append(frame)
+
+        [img_points,_] = cv2.projectPoints(object['center_wrt_cam'], rvec, tvec, intrinsic,distCoeffs=distCoeff)
+        object['img_point']= img_points[0][0]
+
+        object['x_pix'] = int(object['img_point'][0])
+        object['y_pix'] = int(object['img_point'][1])
+
+    # validate the object
+    for object_idx, object in enumerate(objects):
+        for object_idx_2, object_2 in enumerate(objects):
+            if object['idx'] != object_2['idx'] and object['idx'] < object_2['idx']:
+                # print(object['idx'])
+                # print(object_2['idx'])
+                # print(abs( abs(object['x_pix']) - abs(object_2['x_pix']) ))
+
+                if abs( abs(object['x_pix']) - abs(object_2['x_pix']) ) > 80 :
+                    object['valid'] = True
+                else: # take the object closest to the camera meaning the one with highest y
+                    if object['y_pix'] > object_2['y_pix']:
+                        object['valid'] = True
+                        object_2['valid'] = False
+                    else:
+                        object['valid'] = False
+                        object_2['valid'] = True
+                        
+    # print on the image the valid object
+    for object_idx, object in enumerate(objects):
+        if object['valid'] == True:
+            
+            top_l_x = object['x_pix'] - int(width/2)
+            top_l_y =  object['y_pix'] - int(height/2)
+            bot_r_x = object['x_pix'] + int(width/2)
+            bott_r_y =  object['y_pix'] + int(height/2)
+
+            object['crop'] = image[ top_l_y:bott_r_y , top_l_x:bot_r_x ]
+            cv2.imshow('win',object['crop'])
+            cv2.waitKey(0)
+
+            img_2 = cv2.circle(image, (object['x_pix'],object['y_pix']), 3 ,[0,255,0], -1)
+            img_2 = cv2.rectangle(image, (top_l_x,top_l_y) ,(bot_r_x,bott_r_y), [0,255,0], 2)
+
+
+    # o3d.visualization.draw_geometries(entities_4,   
+    #                             zoom=view['trajectory'][0]['zoom'],
+    #                             front=view['trajectory'][0]['front'],
+    #                             lookat=view['trajectory'][0]['lookat'],
+    #                             up=view['trajectory'][0]['up'],
+    #                             point_show_normal=False)
 
     #-------------------------------------------------- 
     # # other images
@@ -523,19 +567,17 @@ def main():
     # center_points = np.delete(center_points,0,0)
 
 
-    [img_points,_] = cv2.projectPoints(center_points, rvec, tvec, intrinsic,distCoeffs=distCoeff)
+    # [img_points,_] = cv2.projectPoints(center_points, rvec, tvec, intrinsic,distCoeffs=distCoeff)
 
-    width = 80
-    height = 70
-    for i in range(np.size(img_points,0)) :
-        x_pix = int(img_points[i][0][0])
-        y_pix = int(img_points[i][0][1])
-        img_2 = cv2.circle(image, (x_pix,y_pix), 3 ,[0,255,0], -1)
-        top_l_x = x_pix - int(width/2)
-        top_l_y =  y_pix - int(height/2)
-        bot_r_x = x_pix + int(width/2)
-        bott_r_y =  y_pix + int(height/2)
-        img_2 = cv2.rectangle(image, (top_l_x,top_l_y) ,(bot_r_x,bott_r_y), [0,255,0], 2)
+    # for i in range(np.size(img_points,0)) :
+    #     x_pix = int(img_points[i][0][0])
+    #     y_pix = int(img_points[i][0][1])
+    #     img_2 = cv2.circle(image, (x_pix,y_pix), 3 ,[0,255,0], -1)
+    #     top_l_x = x_pix - int(width/2)
+    #     top_l_y =  y_pix - int(height/2)
+    #     bot_r_x = x_pix + int(width/2)
+    #     bott_r_y =  y_pix + int(height/2)
+    #     img_2 = cv2.rectangle(image, (top_l_x,top_l_y) ,(bot_r_x,bott_r_y), [0,255,0], 2)
 
     cv2.imshow('win',image)
     cv2.waitKey(0)
