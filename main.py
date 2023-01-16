@@ -24,7 +24,7 @@ from sklearn.metrics import accuracy_score
 
 
 def main():
-    # -----------------------------------------------------------------
+
     # Initialization
     # -----------------------------------------------------------------
     # Define hyper parameters

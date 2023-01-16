@@ -97,13 +97,19 @@ def main():
 
     dataset_path = 'assignment_2/SAVI---Where-s-my-coffee-mug/datasets/scene_pc' # relative path
 
-
-    image = cv2.imread('/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/imgs/scene_01/00000-color.png')
-
     point_cloud_filenames = glob.glob(dataset_path+'/*.ply')
     point_cloud_filename = random.choice(point_cloud_filenames)
 
-    point_cloud_filename = dataset_path+'/01.ply' # 09-12 problem for the sofa and 5-8 of the z axis not pointing towards the table
+    # to manually select a scenario
+    point_cloud_filename = dataset_path+'/01.ply' 
+
+    parts = point_cloud_filename.split('/')
+    part = parts[-1]
+    part = part.split('.')
+    part = part[0]
+
+    image_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/imgs/scene_'+str(part)+'/00000-color.png'
+    image = cv2.imread(image_path)
 
     os.system('pcl_ply2pcd ' +point_cloud_filename+ ' pcd_point_cloud.pcd')
     point_cloud_original = o3d.io.read_point_cloud('pcd_point_cloud.pcd')
