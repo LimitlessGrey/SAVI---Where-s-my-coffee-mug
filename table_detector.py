@@ -390,6 +390,8 @@ def main():
     for object_idx, object in enumerate(objects):
         entities_2.append(object['bbox'])
 
+
+
     # ------------------------------------------
     # Visualization
     # ------------------------------------------
@@ -452,6 +454,25 @@ def main():
     w.add_child(widget3d)
 
     app.run()
+
+    entities_4 = []
+    entities_4.append(point_cloud_original)
+
+    for object_idx, object in enumerate(objects):
+        object['center_wrt_cam'] = object['points'].rotate(-R,center=(0,0,0))
+        object['center_wrt_cam']= object['center_wrt_cam'].translate(center)
+        object['center_wrt_cam']= object['center_wrt_cam'].get_center()
+        print(object['center_wrt_cam'])
+        frame = o3d.geometry.TriangleMesh().create_coordinate_frame(size=0.5, origin = np.array(object['center_wrt_cam']))
+        entities_4.append(frame)
+
+    o3d.visualization.draw_geometries(entities_4,   
+                                zoom=view['trajectory'][0]['zoom'],
+                                front=view['trajectory'][0]['front'],
+                                lookat=view['trajectory'][0]['lookat'],
+                                up=view['trajectory'][0]['up'],
+                                point_show_normal=False)
+
 
 if __name__ == "__main__":
     main()
