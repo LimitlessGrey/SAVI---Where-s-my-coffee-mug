@@ -20,6 +20,7 @@ import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
 from Classifier import Classifier
 from PIL import Image
+from TTS import TTS
 
 # define the view for visualize different results
 view={
@@ -494,6 +495,8 @@ def main():
             im = Image.fromarray(object['crop'])
             object['class_name'] = Classifier(im)
             print(object['class_name'])
+            text_to_speach = 'the object detected is a'+ object['class_name']
+            TTS(text_to_speach)
 
             # draw on the image
             img_2 = cv2.circle(image, (object['x_pix'],object['y_pix']), 3 ,[0,255,0], -1)
