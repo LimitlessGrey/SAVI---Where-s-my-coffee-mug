@@ -5,12 +5,12 @@ from gtts import gTTS
 from gtts import lang
 import vlc
 
-def TTS(length, width, depth):
+def TTS(string):
 
-    tts = gTTS(f'The object is {length} centimeters tall, {width} centimeters wide and {depth} centimeters deep.',lang='en', tld='co.in')
-    tts.save('path/player.mp3')
+    tts = gTTS(string,lang='en', tld='co.in')
+    tts.save('assignment_2/SAVI---Where-s-my-coffee-mug/player.mp3')
 
-    p = vlc.MediaPlayer("path/player.mp3")
+    p = vlc.MediaPlayer("assignment_2/SAVI---Where-s-my-coffee-mug/player.mp3")
 
     return p.play()
 

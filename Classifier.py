@@ -20,7 +20,7 @@ from model import Model
 def Classifier(image):
 
 
-    model_path = 'model.pkl'
+    model_path = '/home/igino/Desktop/model.pkl'
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'  # cuda: 0 index of gpu
     model = Model()
 
@@ -28,7 +28,7 @@ def Classifier(image):
     load_model = torch.load(model_path)
     model.load_state_dict(load_model['model_state_dict'])
     model.to(device)
-
+    model.eval()
     # images_path = ''
     # image_filenames = glob.glob(images_path + '')
     # dataset_path = '/home/rafael/Desktop/rgbd-dataset'
