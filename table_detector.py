@@ -97,6 +97,9 @@ def main():
 
     dataset_path = 'assignment_2/SAVI---Where-s-my-coffee-mug/datasets/scene_pc' # relative path
 
+
+    image = cv2.imread('/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/imgs/scene_01/00000-color.png')
+
     point_cloud_filenames = glob.glob(dataset_path+'/*.ply')
     point_cloud_filename = random.choice(point_cloud_filenames)
 
@@ -459,7 +462,7 @@ def main():
     #--------------------------------------
     # image processing
     #--------------------------------------
-    image = cv2.imread('/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/imgs/scene_01/00000-color.png')
+    # image = cv2.imread('/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/imgs/scene_01/00000-color.png')
 
     # camera parameters
     intrinsic = np.array([[570.3, 0, 320],[ 0 , 570.3, 240],[0,0,1]])
@@ -521,10 +524,7 @@ def main():
             object['crop'] = image[ top_l_y:bott_r_y , top_l_x:bot_r_x ]
             cv2.imshow('win',object['crop'])
             cv2.waitKey(0)
-            print(type(object['crop']))
-            # im = Image.fromarray(np.uint8(cm.gist_earth(myarray)*255))
             im = Image.fromarray(object['crop'])
-            print(type(im))
             object['class_name'] = Classifier(im)
             print(object['class_name'])
 
