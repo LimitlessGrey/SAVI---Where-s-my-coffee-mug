@@ -18,7 +18,8 @@ import random
 import math
 import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
-# import pynche
+from Classifier import Classifier
+from PIL import Image
 
 view={
 	"class_name" : "ViewTrajectory",
@@ -520,6 +521,12 @@ def main():
             object['crop'] = image[ top_l_y:bott_r_y , top_l_x:bot_r_x ]
             cv2.imshow('win',object['crop'])
             cv2.waitKey(0)
+            print(type(object['crop']))
+            # im = Image.fromarray(np.uint8(cm.gist_earth(myarray)*255))
+            im = Image.fromarray(object['crop'])
+            print(type(im))
+            object['class_name'] = Classifier(im)
+            print(object['class_name'])
 
             img_2 = cv2.circle(image, (object['x_pix'],object['y_pix']), 3 ,[0,255,0], -1)
             img_2 = cv2.rectangle(image, (top_l_x,top_l_y) ,(bot_r_x,bott_r_y), [0,255,0], 2)
