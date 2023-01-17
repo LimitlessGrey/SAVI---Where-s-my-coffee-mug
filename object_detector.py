@@ -100,7 +100,7 @@ def main():
     point_cloud_filename = random.choice(point_cloud_filenames)
 
     # uncomment this to manually select a scenario
-    point_cloud_filename = dataset_path+'/03.ply' 
+    point_cloud_filename = dataset_path+'/07.ply' 
 
     # find the correspondent rgb images
     parts = point_cloud_filename.split('/')
@@ -472,7 +472,14 @@ def main():
                     else:
                         object['valid'] = False
                         object_2['valid'] = True
-                        
+
+    # take object that are into the camera view
+    x_bound = image.shape[0]
+    y_bound = image.shape[1]
+    for object_idx, object in enumerate(objects):
+        if object['x_pix'] > x_bound or object['y_pix'] > y_bound:
+            object['valid'] = False
+
     # image cropped size
     width = 80
     height = 70
