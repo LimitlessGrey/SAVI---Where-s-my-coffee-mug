@@ -93,7 +93,7 @@ def main():
 
     # personal path to the Washington_RGB-D_Dataset containing:  rgbd-scenes-v2/pc/..    and:   rgbd-scenes-v2/imgs/..
     personal_path = '/home/rafael/Desktop/Washington_RGB-D_Dataset'
-    personal_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset'
+    # personal_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset'
 
     dataset_path = personal_path + '/rgbd-scenes-v2/pc' 
 
@@ -101,7 +101,7 @@ def main():
     point_cloud_filename = random.choice(point_cloud_filenames)
 
     # uncomment this to manually select a scenario
-    point_cloud_filename = dataset_path+'/03.ply' 
+    point_cloud_filename = dataset_path+'/01.ply' 
 
     # find the correspondent rgb images
     parts = point_cloud_filename.split('/')
@@ -509,7 +509,7 @@ def main():
             # draw on the image
             img_2 = cv2.circle(image, (object['x_pix'],object['y_pix']), 3 ,[0,255,0], -1)
             img_2 = cv2.rectangle(image, (top_l_x,top_l_y) ,(bot_r_x,bott_r_y), [0,255,0], 2)
-            img_2 = cv2.putText(image, object['class_name'], (top_l_x,top_l_y),cv2.FONT_HERSHEY_SIMPLEX, 0.6, [0,255,0], 2)
+            img_2 = cv2.putText(image, object['class_name'], (top_l_x,top_l_y- 5),cv2.FONT_HERSHEY_SIMPLEX, 0.6, [0,255,0], 2)
 
     # show the final image with the valid objects
     cv2.imshow('win',image)
