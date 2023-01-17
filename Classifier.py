@@ -20,7 +20,7 @@ from model import Model
 def Classifier(image):
 
 
-    model_path = '/home/igino/Desktop/model.pkl'
+    model_path = 'model.pkl'
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'  # cuda: 0 index of gpu
     model = Model()
 

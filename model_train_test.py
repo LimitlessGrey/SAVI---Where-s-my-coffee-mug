@@ -29,7 +29,7 @@ def main():
     # -----------------------------------------------------------------
     # Define hyper parameters
     resume_training = True
-    model_path = '../model.pkl'
+    model_path = 'model.pkl'
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'  # cuda: 0 index of gpu
 
     model = Model()  # Instantiate model
@@ -45,7 +45,7 @@ def main():
     # -----------------------------------------------------------------
 
     # personal path to the Washington_RGB-D_Dataset containing rgb crop images 
-    personal_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset'
+    personal_path = '/home/rafael/Desktop'
 
     dataset_path = personal_path + '/rgbd-dataset'
     
