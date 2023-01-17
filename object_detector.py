@@ -92,7 +92,7 @@ def main():
     print("Load a ply point cloud, print it, and render it")
 
     # personal path to the Washington_RGB-D_Dataset containing point cloud and rgb images
-    personal_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset'
+    personal_path = '/home/rafael/Desktop/rgbd-scenes-v2_pc'
 
     dataset_path = personal_path + '/rgbd-scenes-v2/pc' 
 
