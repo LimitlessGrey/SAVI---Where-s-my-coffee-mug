@@ -91,13 +91,16 @@ def main():
     # ------------------------------------------
     print("Load a ply point cloud, print it, and render it")
 
-    dataset_path = 'assignment_2/SAVI---Where-s-my-coffee-mug/datasets/scene_pc' 
+    # personal path to the Washington_RGB-D_Dataset containing point cloud and rgb images
+    personal_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset'
+
+    dataset_path = personal_path + '/rgbd-scenes-v2/pc' 
 
     point_cloud_filenames = glob.glob(dataset_path+'/*.ply')
     point_cloud_filename = random.choice(point_cloud_filenames)
 
     # uncomment this to manually select a scenario
-    point_cloud_filename = dataset_path+'/01.ply' 
+    point_cloud_filename = dataset_path+'/03.ply' 
 
     # find the correspondent rgb images
     parts = point_cloud_filename.split('/')
@@ -105,7 +108,8 @@ def main():
     part = part.split('.')
     part = part[0]
 
-    image_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-scenes-v2/imgs/scene_'+str(part)+'/00000-color.png'
+    # take only the first image for the moment
+    image_path = personal_path + '/rgbd-scenes-v2/imgs/scene_'+str(part)+'/00000-color.png'
     image = cv2.imread(image_path)
 
     os.system('pcl_ply2pcd ' +point_cloud_filename+ ' pcd_point_cloud.pcd')
@@ -457,7 +461,8 @@ def main():
         for object_idx_2, object_2 in enumerate(objects):
             if object['idx'] != object_2['idx'] and object['idx'] < object_2['idx']:
 
-                if abs( abs(object['x_pix']) - abs(object_2['x_pix']) ) > 80 :
+                # if abs( abs(object['x_pix']) - abs(object_2['x_pix']) ) > 80 :
+                if math.sqrt( (abs(object['x_pix']) - abs(object_2['x_pix']))**2 + (abs(object['y_pix']) - abs(object_2['y_pix']))**2 ) > 80 :
                     object['valid'] = True
                 else: # take the object closest to the camera meaning the one with highest y
                     if object['y_pix'] > object_2['y_pix']:
@@ -466,6 +471,11 @@ def main():
                     else:
                         object['valid'] = False
                         object_2['valid'] = True
+
+            # if not 'valid' in object:
+            #     object['valid'] = False
+            # if not 'valid' in object_2:
+            #     object['valid'] = False
                         
     # image cropped size
     width = 80
@@ -503,6 +513,8 @@ def main():
     #-------------------------------------------------- 
     # elaborate all the other images
     #---------------------------------------------
+
+
     # 0.813492 -0.0473971 -0.515618 -0.264773 0.959567 -0.513907 0.9545 # for image 00887
 
     # entities_4 = []

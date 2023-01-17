@@ -44,7 +44,11 @@ def main():
     # Datasets
     # -----------------------------------------------------------------
 
-    dataset_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset/rgbd-dataset'# '/home/rafael/Desktop/rgbd-dataset'
+    # personal path to the Washington_RGB-D_Dataset containing rgb crop images 
+    personal_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset'
+
+    dataset_path = personal_path + '/rgbd-dataset'
+    
     image_filenames = glob.glob(dataset_path + '/*/*/*_crop.png')
 
     # Sample only a few images to speed up development
