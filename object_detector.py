@@ -93,7 +93,7 @@ def main():
 
     # personal path to the Washington_RGB-D_Dataset containing:  rgbd-scenes-v2/pc/..    and:   rgbd-scenes-v2/imgs/..
     personal_path = '/home/rafael/Desktop/Washington_RGB-D_Dataset'
-    # personal_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset'
+    personal_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset'
 
     dataset_path = personal_path + '/rgbd-scenes-v2/pc' 
 
@@ -101,7 +101,7 @@ def main():
     point_cloud_filename = random.choice(point_cloud_filenames)
 
     # uncomment this to manually select a scenario
-    point_cloud_filename = dataset_path+'/03.ply' 
+    point_cloud_filename = dataset_path+'/01.ply' 
 
     # find the correspondent rgb images
     parts = point_cloud_filename.split('/')
@@ -475,11 +475,11 @@ def main():
                         object_2['valid'] = True
 
     # take object that are into the camera view
-    # x_bound = image.shape[0]
-    # y_bound = image.shape[1]
-    # for object_idx, object in enumerate(objects):
-    #     if object['x_pix'] > x_bound or object['y_pix'] > y_bound:
-    #         object['valid'] = False
+    x_bound = image.shape[0]
+    y_bound = image.shape[1]
+    for object_idx, object in enumerate(objects):
+        if object['x_pix'] > x_bound or object['y_pix'] > y_bound:
+            object['valid'] = False
 
     # image cropped size
     width = 80
@@ -495,10 +495,6 @@ def main():
             bott_r_y =  object['y_pix'] + int(height/2)
             object['crop'] = image[ top_l_y:bott_r_y , top_l_x:bot_r_x ]
 
-            # print and wait 
-            cv2.imshow('win',object['crop'])
-            cv2.waitKey(0)
-
             # pass the image to the classifier
             im = Image.fromarray(object['crop'])
             object['class_name'] = Classifier(im)
@@ -506,9 +502,16 @@ def main():
             text_to_speach = 'the object detected is a'+ object['class_name']
             TTS(text_to_speach)
 
+            # print and wait 
+            cv2.imshow('win',object['crop'])
+            cv2.waitKey(0)
+
             # draw on the image
             img_2 = cv2.circle(image, (object['x_pix'],object['y_pix']), 3 ,[0,255,0], -1)
             img_2 = cv2.rectangle(image, (top_l_x,top_l_y) ,(bot_r_x,bott_r_y), [0,255,0], 2)
+            # cv2.putText(img_2, label, Point(x, y), FONT_HERSHEY_PLAIN, 1.0, CV_RGB(0,255,0), 2.0)
+            # img_2 = cv2.putText(image, object['class_name'], object['x_pix'],object['y_pix'],cv2.FONT_HERSHEY_PLAIN, 1.0, cv2., 2)
+            # img_2 = cv2.putText(image, 'OpenCV', org, font,fontScale, color, thickness, cv2.LINE_AA)
 
     # show the final image with the valid objects
     cv2.imshow('win',image)
