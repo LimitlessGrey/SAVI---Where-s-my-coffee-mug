@@ -101,7 +101,7 @@ def main():
     point_cloud_filename = random.choice(point_cloud_filenames)
 
     # uncomment this to manually select a scenario
-    point_cloud_filename = dataset_path+'/01.ply' 
+    point_cloud_filename = dataset_path+'/03.ply' 
 
     # find the correspondent rgb images
     parts = point_cloud_filename.split('/')
@@ -509,9 +509,7 @@ def main():
             # draw on the image
             img_2 = cv2.circle(image, (object['x_pix'],object['y_pix']), 3 ,[0,255,0], -1)
             img_2 = cv2.rectangle(image, (top_l_x,top_l_y) ,(bot_r_x,bott_r_y), [0,255,0], 2)
-            # cv2.putText(img_2, label, Point(x, y), FONT_HERSHEY_PLAIN, 1.0, CV_RGB(0,255,0), 2.0)
-            # img_2 = cv2.putText(image, object['class_name'], object['x_pix'],object['y_pix'],cv2.FONT_HERSHEY_PLAIN, 1.0, cv2., 2)
-            # img_2 = cv2.putText(image, 'OpenCV', org, font,fontScale, color, thickness, cv2.LINE_AA)
+            img_2 = cv2.putText(image, object['class_name'], (top_l_x,top_l_y),cv2.FONT_HERSHEY_SIMPLEX, 0.6, [0,255,0], 2)
 
     # show the final image with the valid objects
     cv2.imshow('win',image)
