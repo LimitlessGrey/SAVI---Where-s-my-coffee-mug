@@ -47,7 +47,7 @@ def Classifier(image):
     image_pill = image
     
     image_t= PIL_to_Tensor(image_pill)
-    image_t = image_t[0:3]       
+    # image_t = image_t[0:3]       
     image_t = image_t.unsqueeze(0)
 
 
