@@ -464,6 +464,7 @@ def main():
                 # if abs( abs(object['x_pix']) - abs(object_2['x_pix']) ) > 80 :
                 if math.sqrt( (abs(object['x_pix']) - abs(object_2['x_pix']))**2 + (abs(object['y_pix']) - abs(object_2['y_pix']))**2 ) > 80 :
                     object['valid'] = True
+                    object_2['valid'] = True
                 else: # take the object closest to the camera meaning the one with highest y
                     if object['y_pix'] > object_2['y_pix']:
                         object['valid'] = True
@@ -471,11 +472,6 @@ def main():
                     else:
                         object['valid'] = False
                         object_2['valid'] = True
-
-            # if not 'valid' in object:
-            #     object['valid'] = False
-            # if not 'valid' in object_2:
-            #     object['valid'] = False
                         
     # image cropped size
     width = 80
