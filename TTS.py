@@ -8,9 +8,9 @@ import vlc
 def TTS(string):
 
     tts = gTTS(string,lang='en', tld='co.in')
-    tts.save('assignment_2/SAVI---Where-s-my-coffee-mug/player.mp3')
+    tts.save('player.mp3')
 
-    p = vlc.MediaPlayer("assignment_2/SAVI---Where-s-my-coffee-mug/player.mp3")
+    p = vlc.MediaPlayer("player.mp3")
 
     return p.play()
 

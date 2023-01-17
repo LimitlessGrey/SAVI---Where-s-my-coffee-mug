@@ -11,6 +11,7 @@ import numpy as np
 import open3d as o3d
 import matplotlib.pyplot as plt
 import torch
+import torch.nn.functional as F
 from tqdm import tqdm
 from model import Model
 from dataset import Dataset
@@ -23,19 +24,20 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 
 
+
 def main():
 
     # Initialization
     # -----------------------------------------------------------------
     # Define hyper parameters
     resume_training = True
-    model_path = '../model.pkl'
+    model_path = 'model.pkl'
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'  # cuda: 0 index of gpu
 
     model = Model()  # Instantiate model
     
     learning_rate = 0.001
-    maximum_num_epochs = 50
+    maximum_num_epochs = 100
     termination_loss_threshold = 0.0001
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -45,14 +47,14 @@ def main():
     # -----------------------------------------------------------------
 
     # personal path to the Washington_RGB-D_Dataset containing rgb crop images 
-    personal_path = '/home/igino/Desktop/SAVI_dataset/Washington_RGB-D_Dataset'
+    personal_path = '/home/rafael/Desktop'
 
     dataset_path = personal_path + '/rgbd-dataset'
     
     image_filenames = glob.glob(dataset_path + '/*/*/*_crop.png')
 
     # Sample only a few images to speed up development
-    image_filenames = random.sample(image_filenames, k=1900)
+    image_filenames = random.sample(image_filenames, k=900)
 
     # split images into train and test
     train_image_filenames, test_image_filenames = train_test_split(image_filenames, test_size=0.2)
@@ -140,12 +142,7 @@ def main():
             label_t_predicted = model.forward(image_t)
             # Compute the error based on the predictions
             loss = loss_function(label_t_predicted, label_t)
-      
-            
-                # label_true = label_t[image_idx]
-                # label_predicted = label_t_predicted[image_idx]
-                # print(label_true, label_predicted)
-
+    
                   
 
             # Update the model, i.e. the neural network's weights
@@ -154,14 +151,31 @@ def main():
             optimizer.step()  # update the weights
 
             train_losses.append(loss.data.item())
+            y_true = []
+            y_predicted =[]
+
+            batch_size,_,_,_ = list(image_t.shape)
+            output_probabilities = F.softmax(label_t_predicted, dim=1).tolist()     
+            random_idxs = list(range(batch_size))
+            for _, image_idx in enumerate(random_idxs):
+                
+                label_true = label_t[image_idx].data.item()
+                y_true.append(label_true)
+                
+                output_probability = output_probabilities[image_idx]
+                max_value=max(output_probability)
+                label_predicted = output_probability.index(max_value)
+                y_predicted.append(label_predicted)
+               
+                # print(label_true, label_predicted)
 
         # Compute the loss for the epoch
         epoch_train_loss = mean(train_losses)
         epoch_train_losses.append(epoch_train_loss)
 
         print(Fore.BLUE + 'Epoch ' + str(idx_epoch) + ' Loss ' + str(epoch_train_loss) + Style.RESET_ALL)
-        # print(classification_report(label_true.data.item(), label_predicted.data.item(), target_names=class_name[image_idx], digits=4))
-        
+        print(classification_report(y_true, y_predicted, target_names=None, digits=2))
+        print(accuracy_score(y_true, y_predicted))
         #Run test in batches ---------------------------------------
         # TODO dropout
 
